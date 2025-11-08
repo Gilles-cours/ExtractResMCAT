@@ -455,9 +455,14 @@
             results.forEach((rowData, index) => {
                 html += `<h3 style="color: #667eea; margin-top: ${index > 0 ? '30px' : '0'};">Ligne ${rowData.rowNumber} - IRN: ${rowData.irn}</h3>`;
 
+                // Ajouter les positions
+                html += '<p style="margin: 10px 0; color: #555;">';
+                html += `<strong>Source:</strong> X=${rowData.positions.sourcePosX}, Y=${rowData.positions.sourcePosY}, Z=${rowData.positions.sourcePosZ} | `;
+                html += `<strong>Sensor:</strong> X=${rowData.positions.sensorX}, Y=${rowData.positions.sensorY}, Z=${rowData.positions.sensorZ}`;
+                html += '</p>';
+
                 html += '<table>';
                 html += '<thead><tr>';
-                html += '<th>Mesure</th>';
                 html += '<th>EquiDose</th>';
                 html += '<th>Incertitude</th>';
                 html += '</tr></thead>';
@@ -465,7 +470,6 @@
 
                 rowData.data.forEach(item => {
                     html += '<tr>';
-                    html += `<td><strong>${item.target}</strong></td>`;
                     html += `<td class="value-highlight">${item.equidose}</td>`;
                     html += `<td class="value-highlight">${item.uncertainty}</td>`;
                     html += '</tr>';
