@@ -450,37 +450,30 @@
         function displaySummaryTable(results) {
             const summaryDiv = document.getElementById('summaryTable');
 
-            let html = '<table>';
-            html += '<thead><tr>';
-            html += '<th>IRN</th>';
-            html += '<th>Valeur</th>';
-            html += '<th>F5</th>';
-            html += '<th>F15</th>';
-            html += '<th>F25</th>';
-            html += '<th>F35</th>';
-            html += '</tr></thead>';
-            html += '<tbody>';
+            let html = '';
 
-            results.forEach(rowData => {
-                // Ligne EquiDose
-                html += '<tr>';
-                html += `<td rowspan="2"><strong>${rowData.irn}</strong></td>`;
-                html += '<td><strong>EquiDose</strong></td>';
+            results.forEach((rowData, index) => {
+                html += `<h3 style="color: #667eea; margin-top: ${index > 0 ? '30px' : '0'};">Ligne ${rowData.rowNumber} - IRN: ${rowData.irn}</h3>`;
+
+                html += '<table>';
+                html += '<thead><tr>';
+                html += '<th>Mesure</th>';
+                html += '<th>EquiDose</th>';
+                html += '<th>Incertitude</th>';
+                html += '</tr></thead>';
+                html += '<tbody>';
+
                 rowData.data.forEach(item => {
+                    html += '<tr>';
+                    html += `<td><strong>${item.target}</strong></td>`;
                     html += `<td class="value-highlight">${item.equidose}</td>`;
-                });
-                html += '</tr>';
-
-                // Ligne Incertitude
-                html += '<tr>';
-                html += '<td><strong>Incertitude</strong></td>';
-                rowData.data.forEach(item => {
                     html += `<td class="value-highlight">${item.uncertainty}</td>`;
+                    html += '</tr>';
                 });
-                html += '</tr>';
+
+                html += '</tbody></table>';
             });
 
-            html += '</tbody></table>';
             summaryDiv.innerHTML = html;
         }
 
