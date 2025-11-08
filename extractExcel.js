@@ -43,6 +43,27 @@ function extractDataFromExcel(filePath) {
         // La première ligne contient les en-têtes
         const headers = jsonData[0];
 
+        // Trouver les indices des colonnes pour les positions
+        const positionIndices = {
+            sourcePosX: -1,
+            sourcePosY: -1,
+            sourcePosZ: -1,
+            sensorX: -1,
+            sensorY: -1,
+            sensorZ: -1
+        };
+
+        headers.forEach((header, index) => {
+            if (header && typeof header === 'string') {
+                if (header.includes('Source Pos X')) positionIndices.sourcePosX = index;
+                if (header.includes('Source Pos Y')) positionIndices.sourcePosY = index;
+                if (header.includes('Source Pos Z')) positionIndices.sourcePosZ = index;
+                if (header === 'Sensor X') positionIndices.sensorX = index;
+                if (header === 'Sensor Y') positionIndices.sensorY = index;
+                if (header === 'Sensor Z') positionIndices.sensorZ = index;
+            }
+        });
+
         // Trouver les indices des colonnes pour F5, F15, F25, F35
         const columnIndices = {};
         const targets = ['F5', 'F15', 'F25', 'F35'];
@@ -78,9 +99,23 @@ function extractDataFromExcel(filePath) {
 
         for (let rowIndex = 1; rowIndex < jsonData.length; rowIndex++) {
             const row = jsonData[rowIndex];
+            const getValue = (row, index) => {
+                if (index < 0) return 'N/A';
+                const val = row[index];
+                return (val !== undefined && val !== null && val !== '') ? val : 'N/A';
+            };
+
             const rowData = {
                 rowNumber: rowIndex + 1,
                 irn: row[0] || 'N/A',
+                positions: {
+                    sourcePosX: getValue(row, positionIndices.sourcePosX),
+                    sourcePosY: getValue(row, positionIndices.sourcePosY),
+                    sourcePosZ: getValue(row, positionIndices.sourcePosZ),
+                    sensorX: getValue(row, positionIndices.sensorX),
+                    sensorY: getValue(row, positionIndices.sensorY),
+                    sensorZ: getValue(row, positionIndices.sensorZ)
+                },
                 data: []
             };
 
@@ -101,6 +136,7 @@ function extractDataFromExcel(filePath) {
         console.log('\n=== Extraction des valeurs ===');
         results.forEach(rowData => {
             console.log(`\nLigne ${rowData.rowNumber} (IRN: ${rowData.irn}):`);
+            console.log(`  Positions: Source(${rowData.positions.sourcePosX}, ${rowData.positions.sourcePosY}, ${rowData.positions.sourcePosZ}) Sensor(${rowData.positions.sensorX}, ${rowData.positions.sensorY}, ${rowData.positions.sensorZ})`);
             rowData.data.forEach(item => {
                 console.log(`  ${item.target}: EquiDose = ${item.equidose}, Uncertainty = ${item.uncertainty}`);
             });
@@ -122,6 +158,15 @@ function generateTextFile(results, outputPath) {
         content += `────────────────────────────────────────\n`;
         content += `Ligne ${rowData.rowNumber} - IRN: ${rowData.irn}\n`;
         content += `────────────────────────────────────────\n\n`;
+
+        // Ajouter les positions
+        content += `Positions:\n`;
+        content += `  Source Pos X: ${rowData.positions.sourcePosX}\n`;
+        content += `  Source Pos Y: ${rowData.positions.sourcePosY}\n`;
+        content += `  Source Pos Z: ${rowData.positions.sourcePosZ}\n`;
+        content += `  Sensor X:     ${rowData.positions.sensorX}\n`;
+        content += `  Sensor Y:     ${rowData.positions.sensorY}\n`;
+        content += `  Sensor Z:     ${rowData.positions.sensorZ}\n\n`;
 
         rowData.data.forEach(item => {
             content += `Valeur de ${item.target}:\n`;
