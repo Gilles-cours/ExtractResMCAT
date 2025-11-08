@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Extracteur de données Excel MCAT</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+        }
+
+        h1 {
+            color: #667eea;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .upload-section {
+            text-align: center;
+            padding: 40px;
+            border: 3px dashed #667eea;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            background: #f8f9ff;
+            transition: all 0.3s ease;
+        }
+
+        .upload-section:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-section h2 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 15px 40px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 50px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-download {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            box-shadow: 0 4px 15px rgba(17, 153, 142, 0.4);
+            margin-top: 20px;
+        }
+
+        .btn-download:hover {
+            box-shadow: 0 6px 20px rgba(17, 153, 142, 0.6);
+        }
+
+        #fileName {
+            margin-top: 15px;
+            color: #666;
+            font-weight: bold;
+        }
+
+        .results {
+            margin-top: 30px;
+            display: none;
+        }
+
+        .results.show {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .info-box {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .row-section {
+            background: #f9f9f9;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+
+        .row-section h3 {
+            color: #667eea;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #667eea;
+        }
+
+        .data-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .data-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+        }
+
+        .data-item h4 {
+            color: #764ba2;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .data-item p {
+            margin: 5px 0;
+            color: #555;
+        }
+
+        .data-item strong {
+            color: #333;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            background: white;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        th {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 15px;
+            text-align: left;
+            font-weight: bold;
+        }
+
+        td {
+            padding: 12px 15px;
+            border-bottom: 1px solid #ddd;
+        }
+
+        tr:hover {
+            background: #f5f5f5;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .summary-table {
+            margin-top: 30px;
+        }
+
+        .summary-table h2 {
+            color: #667eea;
+            margin-bottom: 15px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .value-highlight {
+            font-family: 'Courier New', monospace;
+            background: #fff3cd;
+            padding: 2px 6px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Extracteur de données Excel MCAT</h1>
+
+        <div class="upload-section">
+            <h2>Sélectionnez votre fichier Excel</h2>
+            <label for="fileInput" class="btn">
+                📁 Choisir un fichier Excel
+            </label>
+            <input type="file" id="fileInput" accept=".xlsx, .xls">
+            <div id="fileName"></div>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Traitement en cours...</p>
+        </div>
+
+        <div class="results" id="results">
+            <div class="info-box">
+                <strong>📄 Feuille:</strong> <span id="sheetName"></span><br>
+                <strong>📈 Nombre de lignes:</strong> <span id="rowCount"></span>
+            </div>
+
+            <div id="detailsSection"></div>
+
+            <div class="summary-table">
+                <h2>📋 Tableau Récapitulatif</h2>
+                <div id="summaryTable"></div>
+            </div>
+
+            <div style="text-align: center;">
+                <button class="btn btn-download" onclick="downloadResults()">
+                    💾 Télécharger les résultats (TXT)
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let extractedData = null;
+
+        document.getElementById('fileInput').addEventListener('change', handleFileSelect);
+
+        function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            document.getElementById('fileName').textContent = `Fichier sélectionné: ${file.name}`;
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('results').classList.remove('show');
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    processExcelFile(e.target.result);
+                } catch (error) {
+                    alert('Erreur lors de la lecture du fichier: ' + error.message);
+                    document.getElementById('loading').classList.remove('show');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processExcelFile(data) {
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheetName = workbook.SheetNames[0];
+            const worksheet = workbook.Sheets[sheetName];
+            const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+            // Mise à jour des informations
+            document.getElementById('sheetName').textContent = sheetName;
+            document.getElementById('rowCount').textContent = jsonData.length - 1;
+
+            // Traiter les données
+            const headers = jsonData[0];
+            const targets = ['F5', 'F15', 'F25', 'F35'];
+
+            // Trouver les colonnes
+            const columnIndices = {};
+            targets.forEach(target => {
+                columnIndices[target] = {
+                    equidose: -1,
+                    uncertainty: -1
+                };
+
+                headers.forEach((header, index) => {
+                    if (header && typeof header === 'string') {
+                        if (header.includes(target) && header.includes('EquiDose')) {
+                            columnIndices[target].equidose = index;
+                        }
+                        if (header.includes(target) && header.includes('Uncertainty')) {
+                            columnIndices[target].uncertainty = index;
+                        }
+                    }
+                });
+            });
+
+            // Extraire les résultats
+            const results = [];
+            for (let rowIndex = 1; rowIndex < jsonData.length; rowIndex++) {
+                const row = jsonData[rowIndex];
+                const rowData = {
+                    rowNumber: rowIndex + 1,
+                    irn: row[0] || 'N/A',
+                    data: []
+                };
+
+                targets.forEach(target => {
+                    const equidoseIndex = columnIndices[target].equidose;
+                    const uncertaintyIndex = columnIndices[target].uncertainty;
+
+                    rowData.data.push({
+                        target: target,
+                        equidose: equidoseIndex >= 0 ? (row[equidoseIndex] || 'N/A') : 'N/A',
+                        uncertainty: uncertaintyIndex >= 0 ? (row[uncertaintyIndex] || 'N/A') : 'N/A'
+                    });
+                });
+
+                results.push(rowData);
+            }
+
+            extractedData = results;
+            displayResults(results);
+
+            document.getElementById('loading').classList.remove('show');
+            document.getElementById('results').classList.add('show');
+        }
+
+        function displayResults(results) {
+            // Afficher les détails
+            const detailsSection = document.getElementById('detailsSection');
+            detailsSection.innerHTML = '';
+
+            results.forEach(rowData => {
+                const rowDiv = document.createElement('div');
+                rowDiv.className = 'row-section';
+
+                let html = `<h3>Ligne ${rowData.rowNumber} - IRN: ${rowData.irn}</h3>`;
+                html += '<div class="data-grid">';
+
+                rowData.data.forEach(item => {
+                    html += `
+                        <div class="data-item">
+                            <h4>${item.target}</h4>
+                            <p><strong>EquiDose:</strong> <span class="value-highlight">${item.equidose}</span></p>
+                            <p><strong>Incertitude:</strong> <span class="value-highlight">${item.uncertainty}</span></p>
+                        </div>
+                    `;
+                });
+
+                html += '</div>';
+                rowDiv.innerHTML = html;
+                detailsSection.appendChild(rowDiv);
+            });
+
+            // Afficher le tableau récapitulatif
+            displaySummaryTable(results);
+        }
+
+        function displaySummaryTable(results) {
+            const summaryDiv = document.getElementById('summaryTable');
+
+            let html = '<table>';
+            html += '<thead><tr>';
+            html += '<th>IRN</th>';
+            html += '<th>Valeur</th>';
+            html += '<th>F5</th>';
+            html += '<th>F15</th>';
+            html += '<th>F25</th>';
+            html += '<th>F35</th>';
+            html += '</tr></thead>';
+            html += '<tbody>';
+
+            results.forEach(rowData => {
+                // Ligne EquiDose
+                html += '<tr>';
+                html += `<td rowspan="2"><strong>${rowData.irn}</strong></td>`;
+                html += '<td><strong>EquiDose</strong></td>';
+                rowData.data.forEach(item => {
+                    html += `<td class="value-highlight">${item.equidose}</td>`;
+                });
+                html += '</tr>';
+
+                // Ligne Incertitude
+                html += '<tr>';
+                html += '<td><strong>Incertitude</strong></td>';
+                rowData.data.forEach(item => {
+                    html += `<td class="value-highlight">${item.uncertainty}</td>`;
+                });
+                html += '</tr>';
+            });
+
+            html += '</tbody></table>';
+            summaryDiv.innerHTML = html;
+        }
+
+        function downloadResults() {
+            if (!extractedData) return;
+
+            let content = '=== RÉSULTATS D\'EXTRACTION ===\n\n';
+
+            extractedData.forEach(rowData => {
+                content += '────────────────────────────────────────\n';
+                content += `Ligne ${rowData.rowNumber} - IRN: ${rowData.irn}\n`;
+                content += '────────────────────────────────────────\n\n';
+
+                rowData.data.forEach(item => {
+                    content += `Valeur de ${item.target}:\n`;
+                    content += `  EquiDose:     ${item.equidose}\n`;
+                    content += `  Incertitude:  ${item.uncertainty}\n`;
+                    content += '\n';
+                });
+
+                content += '\n';
+            });
+
+            // Tableau récapitulatif
+            content += '\n═══════════════════════════════════════════════════════════════\n';
+            content += 'TABLEAU RÉCAPITULATIF\n';
+            content += '═══════════════════════════════════════════════════════════════\n\n';
+
+            content += 'IRN'.padEnd(15) + ' | ';
+            content += 'Valeur'.padEnd(8) + ' | ';
+            content += 'F5'.padEnd(15) + ' | ';
+            content += 'F15'.padEnd(15) + ' | ';
+            content += 'F25'.padEnd(15) + ' | ';
+            content += 'F35'.padEnd(15) + '\n';
+            content += '─'.repeat(15) + '─┼─';
+            content += '─'.repeat(8) + '─┼─';
+            content += '─'.repeat(15) + '─┼─';
+            content += '─'.repeat(15) + '─┼─';
+            content += '─'.repeat(15) + '─┼─';
+            content += '─'.repeat(15) + '\n';
+
+            extractedData.forEach(rowData => {
+                // Ligne EquiDose
+                content += String(rowData.irn).padEnd(15) + ' | ';
+                content += 'EquiDose'.padEnd(8) + ' | ';
+                rowData.data.forEach(item => {
+                    content += String(item.equidose).padEnd(15) + ' | ';
+                });
+                content += '\n';
+
+                // Ligne Incertitude
+                content += ''.padEnd(15) + ' | ';
+                content += 'Incert.'.padEnd(8) + ' | ';
+                rowData.data.forEach(item => {
+                    content += String(item.uncertainty).padEnd(15) + ' | ';
+                });
+                content += '\n';
+
+                content += ''.padEnd(15) + ' | ';
+                content += ''.padEnd(8) + ' | ';
+                content += ''.padEnd(15) + ' | ';
+                content += ''.padEnd(15) + ' | ';
+                content += ''.padEnd(15) + ' | ';
+                content += ''.padEnd(15) + '\n';
+            });
+
+            // Télécharger le fichier
+            const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = 'resultats_extraction.txt';
+            link.click();
+        }
+    </script>
+</body>
+</html>

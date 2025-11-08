@@ -2,16 +2,37 @@
 
 Script JavaScript pour extraire les valeurs "EquiDose" et "Incertitude" des colonnes F5, F15, F25, F35 d'un fichier Excel MCAT.
 
-## Installation
+## 🌟 Deux versions disponibles
+
+### Version Web (Recommandée) - Interface graphique dans le navigateur
+
+**Aucune installation requise !** Ouvrez simplement le fichier `extracteur.html` dans Google Chrome, Firefox ou tout autre navigateur moderne.
+
+**Avantages:**
+- Interface graphique intuitive et moderne
+- Glisser-déposer de fichiers Excel
+- Visualisation immédiate des résultats
+- Téléchargement des résultats en fichier TXT
+- Aucune installation de Node.js nécessaire
+- Fonctionne 100% en local (vos données ne quittent jamais votre ordinateur)
+
+**Utilisation:**
+1. Double-cliquez sur `extracteur.html`
+2. Cliquez sur "Choisir un fichier Excel"
+3. Sélectionnez votre fichier
+4. Les résultats s'affichent automatiquement
+5. Cliquez sur "Télécharger les résultats" pour sauvegarder en fichier TXT
+
+### Version Ligne de Commande (Node.js)
+
+#### Installation
 
 1. Installer les dépendances :
 ```bash
 npm install
 ```
 
-## Utilisation
-
-### Méthode 1 : Utiliser le fichier par défaut
+#### Méthode 1 : Utiliser le fichier par défaut
 
 Lancez le script et appuyez sur Entrée pour utiliser le fichier `report_standard_S112Part1.xlsx` :
 
@@ -90,7 +111,8 @@ Le script attend un fichier Excel avec :
 
 ## Fichiers
 
-- `extractExcel.js` : Script principal
+- `extracteur.html` : **Interface web** - Ouvrir dans Chrome/Firefox (recommandé)
+- `extractExcel.js` : Script Node.js en ligne de commande
 - `package.json` : Configuration et dépendances
 - `resultats_extraction.txt` : Fichier de sortie généré
 - `report_standard_S112Part1.xlsx` : Fichier Excel exemple
